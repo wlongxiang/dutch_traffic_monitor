@@ -41,10 +41,13 @@ def _download_mp4(manifest, local_dir):
             f.write(segment_m4s.content)
 
     print("Concatenating mp4", time_amsterdam)
-    _mp4_file_path = os.path.join(local_dir, "{}.mp4".format(time_amsterdam.strftime("%Y-%m-%d-%H-%M-%S")))
+    _mp4_file_name = "{}.mp4".format(time_amsterdam.strftime("%Y-%m-%d-%H-%M-%S"))
+    _mp4_file_path = os.path.join(local_dir, _mp4_file_name)
     r = os.system("cat {} {} > {}".format(_init_file_path, _segment_file_path, _mp4_file_path))
     if r != 0:
         raise OSError("failed to concat init file and segment file")
+
+    return _mp4_file_name
 
 
 def download_video_clip(url, local_dir):
@@ -58,7 +61,7 @@ def download_video_clip(url, local_dir):
             f.write(r.text)
     else:
         raise ConnectionError("failed to download manifest file")
-    _download_mp4(manifest=_manifest_path, local_dir=local_dir)
+    return _download_mp4(manifest=_manifest_path, local_dir=local_dir)
 
 
 if __name__ == '__main__':
