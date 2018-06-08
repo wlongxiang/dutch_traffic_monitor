@@ -1,4 +1,3 @@
-MPD_FILE_SLOTEN = "https://stream.vid.nl:1935/rtplive/IB_94.stream/manifest.mpd"
 AMSTELVEEN_URL = "https://stream.vid.nl:1935/rtplive/IB_207.stream/"
 DEFAULT_NS = {"ns": "urn:mpeg:dash:schema:mpd:2011"}
 import datetime
@@ -8,23 +7,15 @@ import xml.etree.ElementTree as ET
 import requests
 
 
-# Download the manifest file
-def _download_manifest(url=AMSTELVEEN_URL, filename="manifest.mpd"):
-    r = requests.get(url=url + filename)
-
-    if r.status_code == 200:
-        with open("videos/" + filename, "w+") as f:
-            f.write(r.text)
-    else:
-        raise ConnectionError("failed to download manifest file")
-
 
 # Extract init m4s file from manifest
 
-def _download_mp4(manifest):
+def _download_mp4(manifest, local_dir):
     root = ET.parse(manifest).getroot()
-    timestamp = root.find("ns:Period/ns:AdaptationSet/ns:SegmentTemplate/ns:SegmentTimeline/ns:S",
-                          namespaces=DEFAULT_NS).attrib["t"]
+    _publish_time = root.attrib["publishTime"]
+    time_amsterdam = datetime.datetime.strptime(_publish_time, "%Y-%m-%dT%H:%M:%SZ") + datetime.timedelta(hours=2)
+    segment_timeline = root.find("ns:Period/ns:AdaptationSet/ns:SegmentTemplate/ns:SegmentTimeline/ns:S",
+                                 namespaces=DEFAULT_NS).attrib["t"]
     representation_id = root.find("ns:Period/ns:AdaptationSet/ns:Representation",
                                   namespaces=DEFAULT_NS).attrib["id"]
     media = root.find("ns:Period/ns:AdaptationSet/ns:SegmentTemplate",
@@ -33,31 +24,42 @@ def _download_mp4(manifest):
                                    namespaces=DEFAULT_NS).attrib["initialization"]
 
     init_file = re.sub(pattern="\$RepresentationID\$", repl=representation_id, string=init_file_template)
-    print("Dowloading init file", init_file)
-    _segment = re.sub(pattern="\$Time\$", repl=timestamp, string=media)
+    _segment = re.sub(pattern="\$Time\$", repl=segment_timeline, string=media)
     segment = re.sub(pattern="\$RepresentationID\$", repl=representation_id, string=_segment)
-    print("Dowloading first segment", segment)
     init_m4s = requests.get(AMSTELVEEN_URL + init_file)
-    with open("videos/init.m4s", "wb+") as f:
-        f.write(init_m4s.content)
+    if init_m4s.status_code == 200:
+        _init_file_path = os.path.join(local_dir, "init.m4s")
+        print("Dowloading init file", init_file)
+        with open(_init_file_path, "wb+") as f:
+            f.write(init_m4s.content)
 
     segment_m4s = requests.get(AMSTELVEEN_URL + segment)
-    with open("videos/segment.m4s", "wb+") as f:
-        f.write(segment_m4s.content)
-    time_now = datetime.datetime.now().strftime("%y-%m-%d-%H-%M-%s")
-    print("Concatenating mp4", "traffic%s.mp4" % time_now)
-    r = os.system("cat videos/init.m4s videos/segment.m4s > videos/traffic%s.mp4" % time_now)
+    if segment_m4s.status_code == 200:
+        _segment_file_path = os.path.join(local_dir, "segment.m4s")
+        print("Dowloading first segment", segment)
+        with open(_segment_file_path, "wb+") as f:
+            f.write(segment_m4s.content)
+
+    print("Concatenating mp4", time_amsterdam)
+    _mp4_file_path = os.path.join(local_dir, "{}.mp4".format(time_amsterdam.strftime("%Y-%m-%d-%H-%M-%S")))
+    r = os.system("cat {} {} > {}".format(_init_file_path, _segment_file_path, _mp4_file_path))
     if r != 0:
         raise OSError("failed to concat init file and segment file")
 
 
-def download_video_clip(url=AMSTELVEEN_URL):
-    # make videos path
-    if not os.path.exists("videos"):
-        os.mkdir("videos")
-    _download_manifest(url=url)
-    _download_mp4(manifest="videos/manifest.mpd")
+def download_video_clip(url, local_dir):
+    # make local path
+    if not os.path.exists(local_dir):
+        os.mkdir(local_dir)
+    _manifest_path = os.path.join(local_dir, "manifest.mpd")
+    r = requests.get(url=url+"manifest.mpd")
+    if r.status_code == 200:
+        with open(_manifest_path, "w+") as f:
+            f.write(r.text)
+    else:
+        raise ConnectionError("failed to download manifest file")
+    _download_mp4(manifest=_manifest_path, local_dir=local_dir)
 
 
 if __name__ == '__main__':
-    download_video_clip()
+    download_video_clip(AMSTELVEEN_URL, "videos")
