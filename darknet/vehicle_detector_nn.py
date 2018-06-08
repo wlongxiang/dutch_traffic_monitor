@@ -4,14 +4,17 @@ import os
 import requests
 
 __cur_dir__ = os.path.dirname(__file__)
-def detect_vehicle_yolov3(img_src, threshold=0.25):
+def detect_vehicle_yolov3(img_src, threshold=0.4):
     # 0.2 is a empirical guess based on random test on aveen a9 video frames
     # Check here for setting threshold: https://pjreddie.com/darknet/yolo/
     # Download the weights if not there
-    if not os.path.isfile("weights/yolov3.weights"):
+    _weights_path = os.path.join(__cur_dir__, "weights/yolov3.weights")
+    if not os.path.isfile(_weights_path):
+        print("yolov3 weights are not found, downloading...")
         r = requests.get("https://pjreddie.com/media/files/yolov3.weights")
-        with open("weights/yolov3.weights", "wb") as f:
+        with open(_weights_path, "wb") as f:
             f.write(r.content)
+        print("weights have been downloded successfully")
 
     cmd = "./darknet detect cfg/yolov3.cfg weights/yolov3.weights %s -thresh %s" % (img_src, threshold)
     ret = subprocess.check_output(cmd, shell=True, cwd=__cur_dir__)
@@ -21,11 +24,18 @@ def detect_vehicle_yolov3(img_src, threshold=0.25):
     for x in ret[1:]:
         label, confidence = x.split(": ")
         _list.append((label, float(confidence.strip('%')) / 100.0))
-    pred_img = cv2.imread(__cur_dir__ +"/predictions_day.png")
+    pred_img = cv2.imread(__cur_dir__ +"/predictions.png")
+    cv2.imshow("predictions", pred_img)
+    while True:
+        if cv2.waitKey(3000) == 27:
+            break
     return _list, pred_img
 
 
 if __name__ == '__main__':
-    ret, img = detect_vehicle_yolov3("../static/bike_on_way.jpeg")
-    print(ret)
-    # pass
+    ret, img = detect_vehicle_yolov3("../sample_images/bike_on_way.jpeg")
+    print("image", ret)
+    cv2.imshow("image", img)
+    while True:
+        if cv2.waitKey(3000) == 27:
+            break
