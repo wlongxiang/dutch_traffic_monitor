@@ -192,11 +192,12 @@ class MysqlDatabase:
 def main_nn():
     db = MysqlDatabase()
     _local_dir = "local_videos"
-    cc = CarCounterVideo()
     while True:
+        cc = CarCounterVideo()
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
         cc.load_video(_local_dir +"/"+ cc.video_downloaded)
-        cc.detect_cars_nn(save_as=None, show_window=True)
+        cc.detect_cars_nn(save_as=None, show_window=True, nb_frames=10)
+        print(cc.nb_of_cars)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
         cc.clean_up()
@@ -204,8 +205,8 @@ def main_nn():
 def main_cascade():
     db = MysqlDatabase()
     _local_dir = "local_videos"
-    cc = CarCounterVideo()
     while True:
+        cc = CarCounterVideo()
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
         cc.load_video(_local_dir +"/"+ cc.video_downloaded)
         cc.add_cascade_classifier("cars.xml")
