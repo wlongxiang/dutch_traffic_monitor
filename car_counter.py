@@ -196,7 +196,7 @@ def main_nn():
     while True:
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
         cc.load_video(_local_dir +"/"+ cc.video_downloaded)
-        cc.detect_cars_nn(save_as=None + cc.video_downloaded, show_window=False)
+        cc.detect_cars_nn(save_as=None, show_window=True)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
         cc.clean_up()
@@ -209,10 +209,10 @@ def main_cascade():
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
         cc.load_video(_local_dir +"/"+ cc.video_downloaded)
         cc.add_cascade_classifier("cars.xml")
-        cc.detect_cars_cascade(save_as="nn_labels_" + cc.video_downloaded, show_window=True)
+        cc.detect_cars_cascade(save_as=None, show_window=True)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
         cc.clean_up()
 
 if __name__ == '__main__':
-    main_cascade()
+    main_nn()
