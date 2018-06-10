@@ -22,6 +22,7 @@ class CarCounterBase:
         self.nb_of_cars = []
         self.video_downloaded = ""
         self.video_publish_time = ""
+        self.local_dir = ""
 
     def add_cascade_classifier(self, cls_xml):
         self.cascade_clf = cv2.CascadeClassifier(cls_xml)
@@ -34,7 +35,15 @@ class CarCounterBase:
 
     def download_video(self, url, local_dir):
         self.video_downloaded = download_video_clip(url=url, local_dir=local_dir)
+        self.local_dir = local_dir
         self.video_publish_time = self.video_downloaded.split(".")[0]
+
+    def clean_up(self):
+        if os.path.exists(self.local_dir):
+            ret = os.system("rm -rf {}".format(self.local_dir))
+            if not os.path.exists(self.local_dir):
+                print("{} is removed".format(self.local_dir))
+
 
     @property
     def avg_nb_of_cars(self):
@@ -184,15 +193,13 @@ def main_nn():
     db = MysqlDatabase()
     _local_dir = "local_videos"
     cc = CarCounterVideo()
-    for x in range(1000):
+    while True:
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
         cc.load_video(_local_dir +"/"+ cc.video_downloaded)
-        cc.detect_cars_nn(save_as="nn_labels_" + cc.video_downloaded, show_window=True)
+        cc.detect_cars_nn(save_as=None + cc.video_downloaded, show_window=False)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
-    ret = db.cursor.execute("select * from traffic.A9")
-    r = db.cursor.fetchall()
-    print(r)
+        cc.clean_up()
 
 def main_cascade():
     db = MysqlDatabase()
@@ -205,15 +212,7 @@ def main_cascade():
         cc.detect_cars_cascade(save_as="nn_labels_" + cc.video_downloaded, show_window=True)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
-    ret = db.cursor.execute("select * from traffic.A9")
-    r = db.cursor.fetchall()
-    print(r)
-
-
-
-
-
-
+        cc.clean_up()
 
 if __name__ == '__main__':
     main_cascade()
