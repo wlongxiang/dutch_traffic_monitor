@@ -1,22 +1,22 @@
-import pandas as pd
 import tempfile
 from darknet import detect_vehicle_yolov3
 from download_traffic_video import download_video_clip
-
+import os
+import cv2
 from mysql.connector import errorcode
 import mysql.connector
+
 AMSTELVEEN_URL = "https://stream.vid.nl:1935/rtplive/IB_207.stream/"
 DEFAULT_NS = {"ns": "urn:mpeg:dash:schema:mpd:2011"}
-import os
 
-import cv2
 
 class CarCounterBase:
     """
     Base class for car counter
     """
-    # This is the defaut size from vid.nl
+    # This is the default size from vid.nl
     videos_width_height = (800, 450)
+
     def __init__(self):
         self.cascade_clf = None
         self.nb_of_cars = []
@@ -40,10 +40,9 @@ class CarCounterBase:
 
     def clean_up(self):
         if os.path.exists(self.local_dir):
-            ret = os.system("rm -rf {}".format(self.local_dir))
+            os.system("rm -rf {}".format(self.local_dir))
             if not os.path.exists(self.local_dir):
                 print("{} is removed".format(self.local_dir))
-
 
     @property
     def avg_nb_of_cars(self):
@@ -52,10 +51,7 @@ class CarCounterBase:
         :return:
         """
         if self.nb_of_cars:
-            return sum(self.nb_of_cars)/len(self.nb_of_cars)
-
-
-
+            return sum(self.nb_of_cars) / len(self.nb_of_cars)
 
 
 class CarCounterVideo(CarCounterBase):
@@ -69,8 +65,7 @@ class CarCounterVideo(CarCounterBase):
         self.video_capture = cv2.VideoCapture(video_src)
         self._fourcc = cv2.VideoWriter_fourcc('A', 'V', 'C', '1')
 
-
-    def detect_cars_cascade(self, save_as=None,show_window=True):
+    def detect_cars_cascade(self, save_as=None, show_window=True):
         if save_as is not None:
             self.video_writer = cv2.VideoWriter(save_as, self._fourcc, 20.0, CarCounterVideo.videos_width_height)
         while True:
@@ -80,7 +75,7 @@ class CarCounterVideo(CarCounterBase):
             # Convert to grayscale
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             # Detect cars
-            cars = self.cascade_clf.detectMultiScale(image=gray, scaleFactor=1.1, minNeighbors=1, minSize=(3,3))
+            cars = self.cascade_clf.detectMultiScale(image=gray, scaleFactor=1.1, minNeighbors=1, minSize=(3, 3))
             self.nb_of_cars.append(len(cars))
             # draw rectangle on detected cars
             for (x, y, w, h) in cars:
@@ -94,7 +89,7 @@ class CarCounterVideo(CarCounterBase):
             if cv2.waitKey(33) == 27:
                 break
 
-    def detect_cars_nn(self, nb_frames = 5, save_as = None, show_window = False):
+    def detect_cars_nn(self, nb_frames=5, save_as=None, show_window=False):
         if save_as is not None:
             self.video_writer = cv2.VideoWriter(save_as, self._fourcc, 20.0, CarCounterVideo.videos_width_height)
         index = 0
@@ -115,11 +110,12 @@ class CarCounterVideo(CarCounterBase):
                 cv2.imshow(self.video_publish_time, pred_img)
             if save_as is not None:
                 self.video_writer.write(pred_img)
-            index = index+1
+            index = index + 1
             # if esc key(27) pressed, break
             if cv2.waitKey(33) == 27:
                 break
         cv2.destroyAllWindows()
+
 
 class CarCounterimage(CarCounterBase):
     def __init__(self):
@@ -136,7 +132,7 @@ class CarCounterimage(CarCounterBase):
             # Convert to grayscale
             gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
             # Detect cars
-            cars = self.cascade_clf.detectMultiScale(image=gray, scaleFactor=1.1, minNeighbors=1, minSize=(3,3))
+            cars = self.cascade_clf.detectMultiScale(image=gray, scaleFactor=1.1, minNeighbors=1, minSize=(3, 3))
             self.nb_of_cars.append(len(cars))
             # draw rectangle on detected cars
             for (x, y, w, h) in cars:
@@ -185,7 +181,7 @@ class MysqlDatabase:
         if not isinstance(values, tuple):
             raise TypeError("expected a tuple, got %s" % type(values))
 
-        self.cursor.execute("insert into traffic.A9 values ('%s', %d)"%values)
+        self.cursor.execute("insert into traffic.A9 values ('%s', %d)" % values)
         self.connection.commit()
 
 
@@ -195,12 +191,13 @@ def main_nn():
     while True:
         cc = CarCounterVideo()
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
-        cc.load_video(_local_dir +"/"+ cc.video_downloaded)
+        cc.load_video(_local_dir + "/" + cc.video_downloaded)
         cc.detect_cars_nn(save_as=None, show_window=True, nb_frames=10)
         print(cc.nb_of_cars)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
         cc.clean_up()
+
 
 def main_cascade():
     db = MysqlDatabase()
@@ -208,12 +205,13 @@ def main_cascade():
     while True:
         cc = CarCounterVideo()
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
-        cc.load_video(_local_dir +"/"+ cc.video_downloaded)
+        cc.load_video(_local_dir + "/" + cc.video_downloaded)
         cc.add_cascade_classifier("cars.xml")
         cc.detect_cars_cascade(save_as=None, show_window=True)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
         cc.clean_up()
+
 
 if __name__ == '__main__':
     main_nn()

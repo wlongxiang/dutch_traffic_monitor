@@ -1,11 +1,11 @@
-AMSTELVEEN_URL = "https://stream.vid.nl:1935/rtplive/IB_207.stream/"
-DEFAULT_NS = {"ns": "urn:mpeg:dash:schema:mpd:2011"}
 import datetime
 import os
 import re
 import xml.etree.ElementTree as ET
 import requests
 
+AMSTELVEEN_URL = "https://stream.vid.nl:1935/rtplive/IB_207.stream/"
+DEFAULT_NS = {"ns": "urn:mpeg:dash:schema:mpd:2011"}
 
 
 # Extract init m4s file from manifest
@@ -55,7 +55,7 @@ def download_video_clip(url, local_dir):
     if not os.path.exists(local_dir):
         os.mkdir(local_dir)
     _manifest_path = os.path.join(local_dir, "manifest.mpd")
-    r = requests.get(url=url+"manifest.mpd")
+    r = requests.get(url=url + "manifest.mpd")
     if r.status_code == 200:
         with open(_manifest_path, "w+") as f:
             f.write(r.text)

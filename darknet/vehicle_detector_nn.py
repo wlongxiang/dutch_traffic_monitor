@@ -4,7 +4,9 @@ import os
 import requests
 
 __cur_dir__ = os.path.dirname(__file__)
-def detect_vehicle_yolov3(img_src, threshold=0.4, show_window = True):
+
+
+def detect_vehicle_yolov3(img_src, threshold=0.4, show_window=True):
     # 0.2 is a empirical guess based on random test on aveen a9 video frames
     # Check here for setting threshold: https://pjreddie.com/darknet/yolo/
     # Download the weights if not there
@@ -24,7 +26,7 @@ def detect_vehicle_yolov3(img_src, threshold=0.4, show_window = True):
     for x in ret[1:]:
         label, confidence = x.split(": ")
         _list.append((label, float(confidence.strip('%')) / 100.0))
-    pred_img = cv2.imread(__cur_dir__ +"/predictions.png")
+    pred_img = cv2.imread(__cur_dir__ + "/predictions.png")
     if show_window:
         cv2.imshow("predictions", pred_img)
         if cv2.waitKey() == 27:
