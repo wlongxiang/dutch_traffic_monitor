@@ -1,4 +1,12 @@
-# Dutch high way traffic monitor
+## Demo results
+
+![](sample_images/predictions.png?raw=true)
+
+![](sample_images/predictions_day.png?raw=true)
+
+![](sample_images/predictions_night.png?raw=true)
+
+![](sample_images/a9_grafana.png?raw=true)
 
 ## Intro
 Traffic on main dutch high ways is being monitored, and some live streaming cameras are
@@ -67,13 +75,3 @@ Click "save and test", if you see connection ok, ready to go!
 ```
 python car_counter.py 
 ```
-
-## Demo results
-
-![](sample_images/predictions.png?raw=true)
-
-![](sample_images/predictions_day.png?raw=true)
-
-![](sample_images/predictions_night.png?raw=true)
-
-![](sample_images/a9_grafana.png?raw=true)
