@@ -44,7 +44,7 @@ pip install -r requirements.txt
 ```
 docker-compose up
 ```
-As a result, *mysql_host_dir* will be mapped to */var/lib/mysql/*, *grafana_host_dir* will be mapped to */var/lib/grafana/*, tis way
+As a result, *mysql_host_dir* will be mapped to */var/lib/mysql/*, *grafana_host_dir* will be mapped to */var/lib/grafana/*, this way
 the data collected will persist in your host directory even if the containers
 are stopped. You can also change the host directory to your desire by modifying the YAML file and 
 rebuild the docker images by running:
@@ -71,6 +71,7 @@ grafana with
   - Password: mysqladmin 
   
 Click "save and test", if you see connection ok, ready to go!
+
 4. Finally, run:
 ```
 python car_counter.py 
