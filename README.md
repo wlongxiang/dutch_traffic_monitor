@@ -50,13 +50,20 @@ are stopped. You can also change the host directory to your desire by modifying 
 rebuild the docker images by running:
 ```
 docker-compose stop
-docker compose up --build
+docker-compose up --build
 ```
 Two containers should be up and running now, check it by running:
 ```
 docker-compose ps
 ```
-3. Open you browser and go to [localhost:3000](localhost:3000), log in to
+3. Finally, run:
+```
+python car_counter.py 
+```
+You should see a openCV window with cars label, if everything goes well. Time to
+visualize!
+
+4. Open you browser and go to [localhost:3000](localhost:3000), log in to
 grafana with
  - username: admin
  - password: admin
@@ -72,7 +79,16 @@ grafana with
   
 Click "save and test", if you see connection ok, ready to go!
 
-4. Finally, run:
+5.  Now you have the data source, go to add a new graph dashboard in grafana, find the metrics tab under edit option of
+your graph, choose dada source *A9*, then paste the following query:
+```dtd
+SELECT
+  time as time_sec,
+  NbofCars as value
+FROM traffic.A9
+ORDER BY time ASC
 ```
-python car_counter.py 
-```
+Click **Query Inspector** to see if you get response, if yes, go to settings, change
+timezone to UTC.
+
+Hooray! Adjust the plot style, change your time range to *Today* or whatever your like to see your data.
