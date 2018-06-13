@@ -214,4 +214,8 @@ def main_cascade():
 
 
 if __name__ == '__main__':
-    main_nn()
+    while True:
+        try:
+            main_nn()
+        except:
+            pass
