@@ -55,7 +55,7 @@ def download_video_clip(url, local_dir):
     if not os.path.exists(local_dir):
         os.mkdir(local_dir)
     _manifest_path = os.path.join(local_dir, "manifest.mpd")
-    r = requests.get(url=url + "manifest.mpd")
+    r = requests.get(url=url + "manifest.mpd", timeout=10)
     if r.status_code == 200:
         with open(_manifest_path, "w+") as f:
             f.write(r.text)

@@ -10,13 +10,18 @@ def detect_vehicle_yolov3(img_src, threshold=0.4, show_window=True):
     # 0.2 is a empirical guess based on random test on aveen a9 video frames
     # Check here for setting threshold: https://pjreddie.com/darknet/yolo/
     # Download the weights if not there
+    # make local path
+    _weights_dir = os.path.join(__cur_dir__, "weights")
+    if not os.path.exists(_weights_dir):
+        print("making weights directory...")
+        os.mkdir(_weights_dir)
     _weights_path = os.path.join(__cur_dir__, "weights/yolov3.weights")
     if not os.path.isfile(_weights_path):
-        print("yolov3 weights are not found, downloading...")
+        print("yolov3 weights are not found, downloading from https://pjreddie.com/media/files/yolov3.weights")
         r = requests.get("https://pjreddie.com/media/files/yolov3.weights")
         with open(_weights_path, "wb") as f:
             f.write(r.content)
-        print("weights have been downloded successfully")
+        print("weights have been downloaded successfully")
 
     cmd = "./darknet detect cfg/yolov3.cfg weights/yolov3.weights %s -thresh %s" % (img_src, threshold)
     ret = subprocess.check_output(cmd, shell=True, cwd=__cur_dir__)
