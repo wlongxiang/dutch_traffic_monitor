@@ -1,7 +1,7 @@
 import tempfile
-from darknet import detect_vehicle_yolov3
-from download_traffic_video import download_video_clip
+from .vehicle_detector_darknet import detect_vehicle_yolov3
 import os
+from dutch_traffic_monitor.download_traffic_video import download_video_clip
 import cv2
 from mysql.connector import errorcode
 import mysql.connector
@@ -157,8 +157,12 @@ class MysqlDatabase:
     )"
 
     def __init__(self):
-        self.connection = mysql.connector.connect(user='root', password='mysqladmin',
-                                                  host='127.0.0.1', port=3306)
+        _host = os.getenv("MYSQL_HOST", "localhost")
+        _port = os.getenv("MYSQL_PORT", 3306)
+        _user = os.getenv("MYSQL_USER_NAME", "root")
+        _password = os.getenv("MYSQL_PASSWORD", "mysqladmin")
+        self.connection = mysql.connector.connect(user=_user, password=_password,
+                                                  host=_host, port=_port, connect_timeout = 10000)
         self.cursor = self.connection.cursor()
         try:
             self.cursor.execute("CREATE DATABASE {} DEFAULT CHARACTER SET 'utf8'".format(self.DB_NAME))
@@ -183,6 +187,7 @@ class MysqlDatabase:
 
         self.cursor.execute("insert into traffic.A9 values ('%s', %d)" % values)
         self.connection.commit()
+        print("record is inserted:", values)
 
 
 def main_nn():
@@ -192,7 +197,7 @@ def main_nn():
         cc = CarCounterVideo()
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
         cc.load_video(_local_dir + "/" + cc.video_downloaded)
-        cc.detect_cars_nn(save_as=None, show_window=True, nb_frames=10)
+        cc.detect_cars_nn(save_as=None, show_window=False, nb_frames=5)
         print(cc.nb_of_cars)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
@@ -207,7 +212,7 @@ def main_cascade():
         cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
         cc.load_video(_local_dir + "/" + cc.video_downloaded)
         cc.add_cascade_classifier("cars.xml")
-        cc.detect_cars_cascade(save_as=None, show_window=True)
+        cc.detect_cars_cascade(save_as=None, show_window=False)
         print(cc.avg_nb_of_cars)
         db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
         cc.clean_up()

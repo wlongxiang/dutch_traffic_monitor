@@ -11,11 +11,12 @@ def detect_vehicle_yolov3(img_src, threshold=0.4, show_window=True):
     # Check here for setting threshold: https://pjreddie.com/darknet/yolo/
     # Download the weights if not there
     # make local path
-    _weights_dir = os.path.join(__cur_dir__, "weights")
+    _dir_darknet = os.path.join(__cur_dir__, "../darknet")
+    _weights_dir = os.path.join(_dir_darknet, "weights")
     if not os.path.exists(_weights_dir):
         print("making weights directory...")
         os.mkdir(_weights_dir)
-    _weights_path = os.path.join(__cur_dir__, "weights/yolov3.weights")
+    _weights_path = os.path.join(_weights_dir, "yolov3.weights")
     if not os.path.isfile(_weights_path):
         print("yolov3 weights are not found, downloading from https://pjreddie.com/media/files/yolov3.weights")
         r = requests.get("https://pjreddie.com/media/files/yolov3.weights")
@@ -24,14 +25,15 @@ def detect_vehicle_yolov3(img_src, threshold=0.4, show_window=True):
         print("weights have been downloaded successfully")
 
     cmd = "./darknet detect cfg/yolov3.cfg weights/yolov3.weights %s -thresh %s" % (img_src, threshold)
-    ret = subprocess.check_output(cmd, shell=True, cwd=__cur_dir__)
+
+    ret = subprocess.check_output(cmd, shell=True, cwd=_dir_darknet)
     ret = ret.decode().splitlines()
     # remove the first element in th return which is like "2-darknet.png: Predicted in 9.295985 seconds."
     _list = []
     for x in ret[1:]:
         label, confidence = x.split(": ")
         _list.append((label, float(confidence.strip('%')) / 100.0))
-    pred_img = cv2.imread(__cur_dir__ + "/predictions.png")
+    pred_img = cv2.imread(_dir_darknet + "/predictions.png")
     if show_window:
         cv2.imshow("predictions", pred_img)
         if cv2.waitKey() == 27:
@@ -40,5 +42,5 @@ def detect_vehicle_yolov3(img_src, threshold=0.4, show_window=True):
 
 
 if __name__ == '__main__':
-    ret, img = detect_vehicle_yolov3("../sample_images/bike_on_way.jpeg")
+    ret, img = detect_vehicle_yolov3("../sample_images/bike_on_way.jpeg", show_window=False)
     print(ret)

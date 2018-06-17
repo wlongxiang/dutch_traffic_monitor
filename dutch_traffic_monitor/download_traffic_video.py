@@ -65,4 +65,4 @@ def download_video_clip(url, local_dir):
 
 
 if __name__ == '__main__':
-    download_video_clip(AMSTELVEEN_URL, "videos")
+    download_video_clip(AMSTELVEEN_URL, "downloaded_videos")
