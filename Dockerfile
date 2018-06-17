@@ -1,4 +1,6 @@
 # the docker image for project
+# exec run.sh within the container to start downloading videos and run detection
+# note: make sure mysql is started beforhand and accessible in same network, see docker-compose.yml
 FROM python:3
 
 WORKDIR /usr/src/app
@@ -22,6 +24,9 @@ RUN \
 	git clone https://github.com/pjreddie/darknet && \
 	cd darknet && \
 	make
+
+RUN \
+    wget https://pjreddie.com/media/files/yolov3.weights -P darknet/weights/
 
 RUN mkdir dutch_traffic_monitor
 COPY ./dutch_traffic_monitor/ ./dutch_traffic_monitor

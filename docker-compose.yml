@@ -1,3 +1,4 @@
+# start up mysql to store time series and grafana to visualize
 version: '3'
 
 services:
@@ -21,7 +22,7 @@ services:
     depends_on:
       - mysql
 
-  py-darknet:
+  pydarknet:
     build: .
     tty: true
     depends_on:

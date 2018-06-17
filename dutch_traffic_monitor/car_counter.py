@@ -176,6 +176,8 @@ class MysqlDatabase:
         except Exception as err:
             if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
                 print("table A9 already exists")
+            else:
+                raise
 
     def __del__(self):
         if self.connection:
