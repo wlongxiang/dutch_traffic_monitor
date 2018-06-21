@@ -32,6 +32,8 @@ def _download_mp4(manifest, local_dir):
         print("Dowloading init file", init_file)
         with open(_init_file_path, "wb+") as f:
             f.write(init_m4s.content)
+    else:
+        raise ConnectionError("failed to download init file {}, request status code is {}".format(init_file, init_m4s.status_code))
 
     segment_m4s = requests.get(AMSTELVEEN_URL + segment)
     if segment_m4s.status_code == 200:
@@ -39,6 +41,9 @@ def _download_mp4(manifest, local_dir):
         print("Dowloading first segment", segment)
         with open(_segment_file_path, "wb+") as f:
             f.write(segment_m4s.content)
+    else:
+        raise ConnectionError("failed to download segment file {}, request status code is {}".format(segment, init_m4s.status_code))
+
 
     print("Concatenating mp4", time_amsterdam)
     _mp4_file_name = "{}.mp4".format(time_amsterdam.strftime("%Y-%m-%d-%H-%M-%S"))

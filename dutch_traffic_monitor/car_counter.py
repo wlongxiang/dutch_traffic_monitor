@@ -1,5 +1,5 @@
 import tempfile
-from .vehicle_detector_darknet import detect_vehicle_yolov3
+from dutch_traffic_monitor.vehicle_detector_darknet import detect_vehicle_yolov3
 import os
 from dutch_traffic_monitor.download_traffic_video import download_video_clip
 import cv2
@@ -191,19 +191,23 @@ class MysqlDatabase:
         self.connection.commit()
         print("record is inserted:", values)
 
+def video_detector_worker(save_as):
+    _local_dir = "local_videos"
+    cc = CarCounterVideo()
+    cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
+    cc.load_video(_local_dir + "/" + cc.video_downloaded)
+    cc.detect_cars_nn(save_as=save_as, show_window=False, nb_frames=65535)
+    print(cc.nb_of_cars)
+    print(cc.avg_nb_of_cars)
+    cc.clean_up()
+    return cc
 
 def main_nn():
     db = MysqlDatabase()
-    _local_dir = "local_videos"
     while True:
-        cc = CarCounterVideo()
-        cc.download_video(AMSTELVEEN_URL, local_dir=_local_dir)
-        cc.load_video(_local_dir + "/" + cc.video_downloaded)
-        cc.detect_cars_nn(save_as=None, show_window=False, nb_frames=5)
-        print(cc.nb_of_cars)
-        print(cc.avg_nb_of_cars)
-        db.insert_record((cc.video_publish_time, round(cc.avg_nb_of_cars)))
-        cc.clean_up()
+        ret = video_detector_worker(save_as=None)
+        db.insert_record((ret.video_publish_time, round(ret.avg_nb_of_cars)))
+
 
 
 def main_cascade():
@@ -221,4 +225,7 @@ def main_cascade():
 
 
 if __name__ == '__main__':
-    main_nn()
+    try:
+        main_nn()
+    except KeyboardInterrupt:
+        print("key board interrupted")
